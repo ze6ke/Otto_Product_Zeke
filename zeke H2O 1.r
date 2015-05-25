@@ -49,7 +49,7 @@ activationOptions<-list("TanhWithDropout", "RectifierWithDropout", "MaxoutWithDr
 hiddenLayerOptions<-list(c(7), c(17), c(35, 17), c(36, 18), c(36, 36), c(36, 36, 36), c(100, 50), c(100, 100), c(100, 20), c(200, 100, 50), c(500, 250, 50), c(500, 500, 250, 100))
 dropoutOptions<-list(0, .1, .2, .5, .7)
 inputDropoutOptions<-list(0, .01, .02, .05, .1, .2, .5)
-epochsOptions<-list(50,100, 200)  #400 was removed because 50 seemed to be plenty
+epochsOptions<-list(5, 10, 25, 50,100)#, 200)  #400 was removed because 50 seemed to be plenty
 trainSamplesPerIterationOptions<-list(-2, 0, 1, 100, 1000, 10000)
 rhoOptions<-list(.95, .98, .99, .999, .9999)
 epsilonOptions<-list(1e-9, 1e-8, 1e-7, 1e-6)
@@ -112,13 +112,13 @@ for(configs in 1:100)
     logLoss[fold]<-multiClassLogLoss(predictions, correct)
     accuracy[fold]<-sum(predictedClasses==correct)/length(correct)
   }
-  results<-rbind(results, data.frame(activation, hiddenLayer, dropout, epochs, trainSamplesPerIteration, rho, l1, l2, maxw2,
+  results<-rbind(results, data.frame(activation, hiddenLayers=paste(hiddenLayers, collapse=";"), droptout=dropout[1], epochs, trainSamplesPerIteration, rho, l1, l2, maxw2,
                             balance_classes, 
                             logLoss1=logLoss[1], logLoss2=logLoss[2], logLoss3=logLoss[3], logLoss4=logLoss[4], 
                             accuracy1=accuracy[1], accuracy2=accuracy[2], accuracy3=accuracy[3], accuracy4=accuracy[4]))
 }
 results
-write.csv(results, file="results.csv", append=T)#col.names=F)
-
+write.csv(results, file="results.csv", append=T, col.names=F)
 #  train[,i] <- sqrt(train[,i]+(3/8))
 #h2o.shutdown(localh2o)
+
