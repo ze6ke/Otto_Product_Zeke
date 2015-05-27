@@ -37,7 +37,6 @@ trainingData<-vector(mode="list", numberOfSlices)
 trainingData.Hex<-vector(mode="list", numberOfSlices)
 for(i in 1:numberOfSlices)
 {
-  
   trainingData[[i]]<-list(train=train[slices!=i,], test=train[slices==i,])
   trainingData[[i]][[1]]<-trainingData[[i]][[1]][sample(1:nrow(trainingData[[i]][[1]])),]
   trainingData[[i]][[2]]<-trainingData[[i]][[2]][sample(1:nrow(trainingData[[i]][[2]])),]
@@ -45,7 +44,7 @@ for(i in 1:numberOfSlices)
                               as.h2o(h2oserver, trainingData[[i]][[2]], key=paste("fold", i, "test", sep="")))
 }
 
-activationOptions<-list("TanhWithDropout", "RectifierWithDropout", "MaxoutWithDropout")
+activationOptions<-list("TanhWithDropout", "RectifierWithDropout", "RectifierWithDropout", "MaxoutWithDropout")#double up on the one that appears the best
 hiddenLayerOptions<-list(c(7), c(17), c(35, 17), c(36, 18), c(36, 36), c(36, 36, 36), c(100, 50), c(100, 100), c(100, 20), c(200, 100, 50), c(500, 250, 50), c(500, 500, 250, 100))
 dropoutOptions<-list(0, .1, .2, .5, .7)
 inputDropoutOptions<-list(0, .01, .02, .05, .1, .2, .5)
@@ -118,7 +117,8 @@ for(configs in 1:100)
                             accuracy1=accuracy[1], accuracy2=accuracy[2], accuracy3=accuracy[3], accuracy4=accuracy[4]))
 }
 results
-write.csv(results, file="results.csv", append=T, col.names=F)
+write.table(results, file="results.csv", append=TRUE, col.names=F, sep=",", qmethod="double")
+#write.csv(results, file="results.csv", append=TRUE, col.names=F)
 #  train[,i] <- sqrt(train[,i]+(3/8))
 #h2o.shutdown(localh2o)
 
