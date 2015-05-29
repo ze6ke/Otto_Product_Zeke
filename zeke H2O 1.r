@@ -48,7 +48,7 @@ activationOptions<-list("TanhWithDropout", "RectifierWithDropout", "RectifierWit
 hiddenLayerOptions<-list(c(7), c(17), c(35, 17), c(36, 18), c(36, 36), c(36, 36, 36), c(100, 50), c(100, 100), c(100, 20), c(200, 100, 50), c(500, 250, 50), c(500, 500, 250, 100))
 dropoutOptions<-list(0, .1, .2, .5, .7)
 inputDropoutOptions<-list(0, .01, .02, .05, .1, .2, .5)
-epochsOptions<-list(5, 10, 25, 50,100)#, 200)  #400 was removed because 50 seemed to be plenty
+epochsOptions<-list(5, 10, 25, 50)#,100)#, 200)  #400 was removed because 50 seemed to be plenty
 trainSamplesPerIterationOptions<-list(-2, 0, 1, 100, 1000, 10000)
 rhoOptions<-list(.95, .98, .99, .999, .9999)
 epsilonOptions<-list(1e-9, 1e-8, 1e-7, 1e-6)
@@ -80,6 +80,7 @@ for(configs in 1:100)
   for(fold in 1:numberOfSlices)
   {
     modelKey<-paste("k", configs, "_",fold, configTitle, sep="")
+    print(modelKey)
     model<-h2o.deeplearning(x=2:94,
                             y=95,
                             data=trainingData.Hex[[fold]][[1]],
@@ -101,7 +102,7 @@ for(configs in 1:100)
                             l2=l2,
                             max_w2=maxw2,
                             balance_classes=balance_classes
-                            )    
+                            )
     model<-h2o.getModel(h2oserver, modelKey)
     predictions.Hex<-h2o.predict(model, trainingData.Hex[[fold]][[2]])
     predictionsRaw<-as.data.frame(predictions.Hex)
