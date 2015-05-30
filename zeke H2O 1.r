@@ -1,4 +1,5 @@
 setwd("C:/Users/ze6ke/Desktop/kaggle/Otto")
+#setwd("D:/Users/Ae-young/Desktop/shared")
 
 #matrix[vertical, horizontal]
 indexOneValuePerRow<-function(valList, ncol, nrow)
@@ -45,11 +46,11 @@ for(i in 1:numberOfSlices)
 }
 
 activationOptions<-list("TanhWithDropout", "RectifierWithDropout", "RectifierWithDropout", "MaxoutWithDropout")#double up on the one that appears the best
-hiddenLayerOptions<-list(c(7), c(17), c(35, 17), c(36, 18), c(36, 36), c(36, 36, 36), c(100, 50), c(100, 100), c(100, 20), c(200, 100, 50), c(500, 250, 50), c(500, 500, 250, 100))
+hiddenLayerOptions<-list(c(7), c(17), c(35, 17), c(36, 18), c(36, 36), c(36, 36, 36), c(100, 50), c(100, 100), c(100, 20), c(200, 100, 50), c(500, 250, 50), c(500, 500, 250, 100), c(1024, 512, 128))
 dropoutOptions<-list(0, .1, .2, .5, .7)
 inputDropoutOptions<-list(0, .01, .02, .05, .1, .2, .5)
-epochsOptions<-list(5, 10, 25, 50)#,100)#, 200)  #400 was removed because 50 seemed to be plenty
-trainSamplesPerIterationOptions<-list(-2, 0, 1, 100, 1000, 10000)
+epochsOptions<-list(5, 5, 10, 10, 15, 25, 50)#,100)#, 200)  #400 was removed because 50 seemed to be plenty
+trainSamplesPerIterationOptions<-list(-2)#, 0, 1, 100, 1000, 10000)
 rhoOptions<-list(.95, .98, .99, .999, .9999)
 epsilonOptions<-list(1e-9, 1e-8, 1e-7, 1e-6)
 l1Options<-list(0, 1e-5, 1e-4, 1e-3, 1e-2)
@@ -77,10 +78,14 @@ for(configs in 1:100)
   logLoss<-rep(NA_real_, numberOfSlices)
   accuracy<-rep(NA_real_, numberOfSlices)
   configTitle<-randomString(4)
+  thisModelsConfig<-data.frame(activation, hiddenLayers=paste(hiddenLayers, collapse=";"), inputDropout, dropout=dropout[1], epochs, trainSamplesPerIteration, 
+                               rho, l1, l2, maxw2, epsilon,
+                               balance_classes)
+  print(thisModelsConfig)
+  startTime<-Sys.time()
   for(fold in 1:numberOfSlices)
   {
     modelKey<-paste("k", configs, "_",fold, configTitle, sep="")
-    print(modelKey)
     model<-h2o.deeplearning(x=2:94,
                             y=95,
                             data=trainingData.Hex[[fold]][[1]],
@@ -112,14 +117,20 @@ for(configs in 1:100)
     logLoss[fold]<-multiClassLogLoss(predictions, correct)
     accuracy[fold]<-sum(predictedClasses==correct)/length(correct)
   }
-  results<-rbind(results, data.frame(activation, hiddenLayers=paste(hiddenLayers, collapse=";"), droptout=dropout[1], epochs, trainSamplesPerIteration, rho, l1, l2, maxw2,
-                            balance_classes, 
-                            logLoss1=logLoss[1], logLoss2=logLoss[2], logLoss3=logLoss[3], logLoss4=logLoss[4], 
-                            accuracy1=accuracy[1], accuracy2=accuracy[2], accuracy3=accuracy[3], accuracy4=accuracy[4]))
+  endTime<-Sys.time()
+  executionTime<-as.numeric(endTime-startTime, units="mins")/4
+  thisModelsResults<-data.frame(activation, hiddenLayers=paste(hiddenLayers, collapse=";"), inputDropout, dropout=dropout[1], epochs, trainSamplesPerIteration, 
+                                rho, l1, l2, maxw2, epsilon,
+                                balance_classes, executionTime, 
+                                logLoss1=logLoss[1], logLoss2=logLoss[2], logLoss3=logLoss[3], logLoss4=logLoss[4], 
+                                accuracy1=accuracy[1], accuracy2=accuracy[2], accuracy3=accuracy[3], accuracy4=accuracy[4])
+  print(thisModelsResults)
+  write.table(thisModelsResults, file="results.csv", append=TRUE, col.names=F, sep=",", qmethod="double")
+  results<-rbind(results, thisModelsResults)
 }
 results
-write.table(results, file="results.csv", append=TRUE, col.names=F, sep=",", qmethod="double")
+#write.table(results, file="results.csv", append=TRUE, col.names=F, sep=",", qmethod="double")
 #write.csv(results, file="results.csv", append=TRUE, col.names=F)
 #  train[,i] <- sqrt(train[,i]+(3/8))
-#h2o.shutdown(localh2o)
+#h2o.shutdown(h2oserver)
 
