@@ -73,11 +73,11 @@ for(j in 1:length(modificationList))
     }
     #trainingData[[j]][[i]][[2]]<-trainingData[[i]][[2]][sample(1:nrow(trainingData[[i]][[2]])),]
     trainingData.Hex[[j]][[i]]<-list(as.h2o(h2oserver, trainingData[[j]][[i]][[1]], key=paste("fold", i, names(trainingData)[j], "train", sep="")), 
-                                as.h2o(h2oserver, trainingData[[j]][[i]][[2]], key=paste("fold", i, names(trainingData)[j], "test", sep="")))
+                                     as.h2o(h2oserver, trainingData[[j]][[i]][[2]], key=paste("fold", i, names(trainingData)[j], "test", sep="")))
   }
 }
 
-activationOptions<-list("TanhWithDropout", "RectifierWithDropout", "RectifierWithDropout", "MaxoutWithDropout")#double up on the one that appears the best
+activationOptions<-list("RectifierWithDropout")#"TanhWithDropout", "RectifierWithDropout", "MaxoutWithDropout")#double up on the one that appears the best
 hiddenLayerOptions<-list(c(7), c(17), c(35, 17), c(36, 18), c(36, 36), c(36, 36, 36), c(100, 50), c(100, 100), c(100, 20), c(200, 100, 50), c(500, 250, 50), c(500, 500, 250, 100), c(1024, 512, 128))
 dropoutOptions<-list(0, .1, .2, .5, .7)
 inputDropoutOptions<-list(0, .01, .02, .05, .1, .2, .5)
@@ -94,21 +94,21 @@ dataTransformationOptions<-c(modificationList, list())#list("raw", "sqrt", "log"
 lossFunctionOptions<-list("CrossEntropy")#, "MeanSquare", "Automatic")
 
 results<-NULL
-for(configs in 1:100)
+for(configs in 1:1)
 {
   activation<-activationOptions[[sample(1:length(activationOptions), 1)]]
-  hiddenLayers<-hiddenLayerOptions[[sample(1:length(hiddenLayerOptions), 1)]]
-  dropout<-rep(dropoutOptions[[sample(1:length(dropoutOptions), 1)]], length(hiddenLayers))
-  inputDropout<-inputDropoutOptions[[sample(1:length(inputDropoutOptions), 1)]]
-  epochs<-epochsOptions[[sample(1:length(epochsOptions), 1)]]
+  hiddenLayers<-c(1024,512,256)
+  dropout<-rep(.5, length(hiddenLayers))
+  inputDropout<-.05
+  epochs<-50
   trainSamplesPerIteration<-trainSamplesPerIterationOptions[[sample(1:length(trainSamplesPerIterationOptions), 1)]]
-  rho<-rhoOptions[[sample(1:length(rhoOptions), 1)]]
-  epsilon<-epsilonOptions[[sample(1:length(epsilonOptions), 1)]]
-  l1<-l1Options[[sample(1:length(l1Options), 1)]]
-  l2<-l2Options[[sample(1:length(l2Options), 1)]]
-  maxw2<-maxw2Options[[sample(1:length(maxw2Options), 1)]]
+  rho<-.99
+  epsilon<-1e-8
+  l1<-1e-5
+  l2<-1e-5
+  maxw2<-10
   balance_classes<-balance_classesOptions[[sample(1:length(balance_classesOptions), 1)]]
-  dataTransformation<-dataTransformationOptions[[sample(1:length(dataTransformationOptions), 1)]]
+  dataTransformation<-"sqrtPlus3Over8"
   lossFunction<-lossFunctionOptions[[sample(1:length(lossFunctionOptions), 1)]]
   
   logLoss<-rep(NA_real_, numberOfSlices)
@@ -144,7 +144,7 @@ for(configs in 1:100)
                             max_w2=maxw2,
                             balance_classes=balance_classes,
                             loss=lossFunction
-                            )
+    )
     model<-h2o.getModel(h2oserver, modelKey)
     predictions.Hex<-h2o.predict(model, trainingData.Hex[[dataTransformation]][[fold]][[2]])
     predictionsRaw<-as.data.frame(predictions.Hex)
@@ -170,6 +170,5 @@ results
 #write.table(results, file="results.csv", append=TRUE, col.names=F, sep=",", qmethod="double")
 #write.csv(results, file="results.csv", append=TRUE, col.names=F)
 #  train[,i] <- sqrt(train[,i]+(3/8))
-h2o.shutdown(h2oserver)
-y
-
+#h2o.shutdown(h2oserver)
+#y
